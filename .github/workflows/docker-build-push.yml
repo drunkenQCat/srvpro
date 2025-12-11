@@ -1,0 +1,99 @@
+name: Build and Push Docker (lite)
+
+on:
+  push:
+    branches:
+      - publish
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-publish-lite
+  cancel-in-progress: true
+
+env:
+  DOCKERHUB_REPOSITORY: drunkenqcat/ygopro-server
+  IMAGE_TAG: lite
+  DOCKERFILE: Dockerfile.lite
+  BUILD_ID: ${{ github.sha }}
+  REGISTRY: docker.io
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Prepare variables
+        id: vars
+        shell: bash
+        run: |
+          echo "SHORT_SHA=${GITHUB_SHA::12}" >> "$GITHUB_ENV"
+          echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_ENV"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push (lite)
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ env.DOCKERFILE }}
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ${{ env.DOCKERHUB_REPOSITORY }}:${{ env.IMAGE_TAG }}
+            ${{ env.DOCKERHUB_REPOSITORY }}:${{ env.IMAGE_TAG }}-${{ env.SHORT_SHA }}
+          labels: |
+            org.opencontainers.image.title=ygopro-server
+            org.opencontainers.image.description=YGOPRO server (lite)
+            org.opencontainers.image.vendor=drunkenQCat
+            org.opencontainers.image.source=${{ github.repository }}
+            org.opencontainers.image.revision=${{ env.BUILD_ID }}
+            org.opencontainers.image.created=${{ env.BUILD_DATE }}
+            org.opencontainers.image.version=${{ env.IMAGE_TAG }}
+            build-id=${{ env.BUILD_ID }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_ID=${{ env.BUILD_ID }}
+          provenance: false
+
+      - name: Build Summary (success)
+        if: success()
+        shell: bash
+        run: |
+          cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
+          Build and Push: SUCCESS
+          Repository: ${{ env.DOCKERHUB_REPOSITORY }}
+          Tags:
+            - ${{ env.IMAGE_TAG }}
+            - ${{ env.IMAGE_TAG }}-${{ env.SHORT_SHA }}
+          Digest: ${{ steps.build.outputs.digest }}
+          Build ID: ${{ env.BUILD_ID }}
+          EOF
+
+      - name: Build Summary (failure)
+        if: failure()
+        shell: bash
+        run: |
+          cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
+          Build and Push: FAILURE
+          Repository: ${{ env.DOCKERHUB_REPOSITORY }}
+          Build ID: ${{ env.BUILD_ID }}
+          Check previous steps for error details.
+          EOF
+
