@@ -2,12 +2,12 @@
 FROM debian:bullseye as premake-builder
 
 RUN apt update && \
-    env DEBIAN_FRONTEND=noninteractive apt install -y wget build-essential p7zip-full uuid-dev && \
+    env DEBIAN_FRONTEND=noninteractive apt install -y wget git build-essential p7zip-full uuid-dev && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/log/*
 
 WORKDIR /usr/src
-RUN wget -O premake.zip https://github.com/premake/premake-core/releases/download/v5.0.0-beta7/premake-5.0.0-beta7-src.zip && \
-    7z x -y -opremake premake.zip && \
+RUN set -e; \
+    for i in $(seq 1 5); do git clone --depth=1 --branch v5.0.0-beta7 https://github.com/premake/premake-core.git premake && break || sleep 5; done; \
     cd premake/build/gmake.unix && \
     make -j$(nproc)
 
