@@ -4,6 +4,16 @@ on:
   push:
     branches:
       - publish
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Image tag
+        required: false
+        default: lite
+      dockerfile:
+        description: Dockerfile path
+        required: false
+        default: Dockerfile.lite
 
 permissions:
   contents: read
@@ -14,8 +24,8 @@ concurrency:
 
 env:
   DOCKERHUB_REPOSITORY: drunkenqcat/ygopro-server
-  IMAGE_TAG: lite
-  DOCKERFILE: Dockerfile.lite
+  IMAGE_TAG: ${{ github.event.inputs.image_tag || 'lite' }}
+  DOCKERFILE: ${{ github.event.inputs.dockerfile || 'Dockerfile' }}
   BUILD_ID: ${{ github.sha }}
   REGISTRY: docker.io
 
