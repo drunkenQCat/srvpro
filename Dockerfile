@@ -29,7 +29,6 @@ COPY --from=premake-builder /usr/src/premake/bin/release/premake5 /usr/bin/prema
 
 RUN git clone --branch=srv-dev --recursive --depth=1 https://github.com/drunkenQCat/ygopro.git && \
     cd ygopro && \
-    # 调试信息1: 显示当前git的log
     echo "===== GIT LOG INFO =====" && \
     git log --oneline -5 && \
     echo "========================" && \
