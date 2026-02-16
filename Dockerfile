@@ -40,16 +40,6 @@ RUN git clone --branch=srv-dev --recursive --depth=1 https://github.com/drunkenQ
     mv ./bin/release/ygopro . && \
     strip ygopro && \
     mkdir replay expansions && \
-    echo "===== CDB FILE INFO =====" && \
-    if [ -f "cards.cdb" ]; then \
-        echo "cards.cdb found in ygopro/ directory" && \
-        du -h cards.cdb | awk '{print "Size:", $1}' && \
-    else \
-        echo "cards.cdb NOT found in ygopro/ directory" && \
-        echo "Searching for .cdb files..." && \
-        find . -name "*.cdb" -type f -exec du -h {} \; 2>/dev/null || echo "No .cdb files found" && \
-    fi && \
-    echo "========================" && \
     rm -rf .git* bin obj build ocgcore cmake lua premake* sound textures .travis.yml *.txt appveyor.yml LICENSE README.md *.lua strings.conf system.conf && \
     ls gframe | sed '/game.cpp/d' | xargs -I {} rm -rf gframe/{}
 
