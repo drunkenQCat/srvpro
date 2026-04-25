@@ -27,7 +27,7 @@ RUN npm ci && \
 
 COPY --from=premake-builder /usr/src/premake/bin/release/premake5 /usr/bin/premake5
 
-RUN git clone --branch=srv-dev --recursive --depth=1 https://github.com/drunkenQCat/ygopro.git && \
+RUN git clone --branch=server --recursive --depth=1 https://github.com/drunkenQCat/ygopro.git && \
     cd ygopro && \
     echo "===== GIT LOG INFO =====" && \
     git log --oneline -5 && \
